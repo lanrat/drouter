@@ -96,7 +96,7 @@ docker run -d \
 ### Label Reference
 
 | Label | Description |
-|-------|-------------|
+| ----- | ----------- |
 | `drouter.routes.ipv4` | IPv4 routes, separated by semicolons or newlines |
 | `drouter.routes.ipv6` | IPv6 routes, separated by semicolons or newlines |
 | `drouter.routes.delay` | Seconds to wait before adding routes (default: 0) |
