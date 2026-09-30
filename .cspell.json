@@ -9,7 +9,8 @@
         "journalctl",
         "nsenter",
         "SUIDSGID",
-        "Tunables"
+        "Tunables",
+        "undelayed"
     ],
     "ignoreWords": [],
     "import": []
