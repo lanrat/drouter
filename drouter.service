@@ -2,10 +2,7 @@
 Description=drouter - Dynamic Route Injection for Docker Containers
 Documentation=https://github.com/lanrat/drouter
 After=docker.service
-Requires=docker.service
-PartOf=docker.service
-
-# Restart if Docker restarts
+# Stop when Docker stops; WantedBy=docker.service below starts it again with Docker
 BindsTo=docker.service
 
 [Service]
@@ -28,12 +25,8 @@ ExecStart=/usr/local/bin/drouter
 User=root
 Group=root
 
-# Security hardening (still allows necessary operations)
-NoNewPrivileges=false
-PrivateDevices=false
-ProtectKernelTunables=false
+# Security hardening that does not interfere with nsenter or the Docker socket
 ProtectKernelModules=true
-ProtectControlGroups=false
 RestrictRealtime=true
 RestrictSUIDSGID=true
 
@@ -43,4 +36,4 @@ StandardError=journal
 SyslogIdentifier=drouter
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=docker.service

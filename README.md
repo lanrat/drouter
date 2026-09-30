@@ -43,6 +43,8 @@ sudo systemctl enable drouter
 sudo systemctl start drouter
 ```
 
+**Upgrading from an older version:** the service is now installed under `docker.service` instead of `multi-user.target`. After copying the new unit file, run `sudo systemctl daemon-reload && sudo systemctl reenable drouter` to move the install symlink.
+
 ## Usage
 
 Add labels to your Docker containers to configure static routes:
@@ -95,8 +97,8 @@ docker run -d \
 
 | Label | Description |
 |-------|-------------|
-| `drouter.routes.ipv4` | Semicolon-separated IPv4 routes |
-| `drouter.routes.ipv6` | Semicolon-separated IPv6 routes |
+| `drouter.routes.ipv4` | IPv4 routes, separated by semicolons or newlines |
+| `drouter.routes.ipv6` | IPv6 routes, separated by semicolons or newlines |
 | `drouter.routes.delay` | Seconds to wait before adding routes (default: 0) |
 
 ### Route Format
@@ -116,6 +118,7 @@ Edit `/etc/systemd/system/drouter.service` to adjust:
 Environment="LOG_LEVEL=INFO"         # DEBUG, INFO, WARN, ERROR
 Environment="DEFAULT_ROUTE_DELAY=0"  # Default delay in seconds
 Environment="RETRY_ATTEMPTS=3"       # Retry attempts for failed routes
+Environment="RETRY_DELAY=1"          # Seconds between retry attempts
 ```
 
 Apply changes:
@@ -191,17 +194,17 @@ sudo journalctl -u drouter | grep <container>
 
 ## How It Works
 
-1. drouter monitors Docker events for container starts, restarts, and unpauses
+1. drouter monitors Docker `start` events (a container restart also emits `start`)
 2. When a container with `drouter.routes.*` labels is detected, it reads the configuration
 3. After an optional delay, it enters the container's network namespace using `nsenter`
-4. Routes are added using `ip route add` commands
-5. Existing routes are preserved and duplicates are avoided
+4. Routes are applied using `ip route replace`: a missing route is added, and an existing route to the same destination is updated in place (for example, if the gateway changed). Other routes in the container are left untouched
+5. Containers are processed in parallel, so one container's delay or retries don't hold up others
 6. On service startup, all running containers are processed for any missing routes
 
 ## Notes
 
 - Routes are automatically re-added when containers restart
-- The service handles Docker daemon restarts gracefully
+- The service stops and starts together with the Docker daemon
 - Containers don't need NET_ADMIN capability or root privileges
 - Routes are not added to containers using host, none, or shared network modes
 - Labels cannot be modified on running containers (requires container recreation)
