@@ -209,6 +209,20 @@ sudo journalctl -u drouter | grep <container>
 - Routes are not added to containers using host, none, or shared network modes
 - Labels cannot be modified on running containers (requires container recreation)
 
+## Testing
+
+Run the integration test against a local Docker daemon:
+
+```bash
+test/integration.sh
+```
+
+It needs access to the Docker socket, but not root on the host. drouter
+runs inside a privileged container that shares the host PID namespace.
+Test containers use separate `drouter-test.routes.*` labels, so an
+installed drouter service is not affected. Set `KEEP=1` to leave the test
+containers running for inspection.
+
 ## License
 
 MIT
