@@ -1,0 +1,29 @@
+services:
+  drouter:
+    image: drouter:latest
+    restart: unless-stopped
+    pull_policy: build
+    environment:
+      - LOG_LEVEL=INFO
+      - DEFAULT_ROUTE_DELAY=0
+      - RETRY_ATTEMPTS=3
+      - RETRY_DELAY=1
+    build:
+      context: .
+      privileged: false
+    pid: host # allow nsenter to access pids
+    cgroup: host # = ProtectControlGroups=false
+    privileged: false
+    cap_add:
+      - CAP_SYS_ADMIN
+      - NET_ADMIN
+      - NET_RAW
+    cap_drop:
+      - SYS_MODULE # = ProtectKernelModules=true
+      - SYS_NICE # = RestrictRealtime=true
+    security_opt:
+      - no-new-privileges:true # = RestrictSUIDSGID=true
+    devices:
+      - /dev/net/tun:/dev/net/tun # = PrivateDevices=false
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
